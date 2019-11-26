@@ -1,0 +1,5 @@
+*.txt
+data/*
+*.pdf
+serialization_dirs
+
