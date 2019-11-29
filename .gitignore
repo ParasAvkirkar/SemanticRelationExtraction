@@ -2,4 +2,6 @@
 data/*
 *.pdf
 serialization_dirs
+.idea
+__pycache__
 

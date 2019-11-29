@@ -17,14 +17,22 @@ class MyBasicAttentiveBiGRU(models.Model):
 
         ### TODO(Students) START
         # ...
+
+        self.bidirectional_layer = layers.Bidirectional(layers.GRU(hidden_size, return_sequences=True), merge_mode='concat')
+
         ### TODO(Students) END
 
     def attn(self, rnn_outputs):
         ### TODO(Students) START
         # ...
+
+        M = tf.tanh(rnn_outputs)
+        alpha = tf.matmul(M, self.omegas)
+        alpha = tf.nn.softmax(alpha, axis=1)
+
         ### TODO(Students) END
 
-        return output
+        return alpha
 
     def call(self, inputs, pos_inputs, training):
         word_embed = tf.nn.embedding_lookup(self.embeddings, inputs)
@@ -32,6 +40,26 @@ class MyBasicAttentiveBiGRU(models.Model):
 
         ### TODO(Students) START
         # ...
+
+        shapes = inputs.get_shape().as_list()
+        batch_size = shapes[0]
+        time_steps = shapes[1]
+
+        final_embed = tf.concat([word_embed, pos_embed], axis=2)
+
+        hidden_states = self.bidirectional_layer(final_embed, training=training)
+
+        attention = self.attn(hidden_states)
+        r = tf.multiply(hidden_states, attention)
+        r = tf.reduce_sum(r, axis=1)
+        h_star = tf.tanh(r)
+
+        # h_star_dim_1 = h_star.get_shape().as_list()[1]
+        # h_star_dim_2 = h_star.get_shape().as_list()[2]
+
+        # h_star = tf.reshape(h_star, [batch_size, h_star_dim_1 * h_star_dim_2])
+        logits = self.decoder(h_star)
+
         ### TODO(Students) END
 
         return {'logits': logits}
