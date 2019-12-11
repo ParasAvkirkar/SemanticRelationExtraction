@@ -18,7 +18,7 @@ class MyBasicAttentiveBiGRU(models.Model):
         ### TODO(Students) START
         # ...
 
-        self.bidirectional_layer = layers.Bidirectional(layers.GRU(hidden_size, return_sequences=True), merge_mode='concat')
+        self.bidirectional_layer = layers.Bidirectional(layers.GRU(units=hidden_size, return_sequences=True), merge_mode='concat')
 
         ### TODO(Students) END
 
@@ -28,7 +28,7 @@ class MyBasicAttentiveBiGRU(models.Model):
 
         M = tf.tanh(rnn_outputs)
         alpha = tf.matmul(M, self.omegas)
-        alpha = tf.nn.softmax(alpha, axis=1)
+        alpha = tf.nn.softmax(alpha)
 
         ### TODO(Students) END
 
@@ -50,14 +50,12 @@ class MyBasicAttentiveBiGRU(models.Model):
         hidden_states = self.bidirectional_layer(final_embed, training=training)
 
         attention = self.attn(hidden_states)
+
         r = tf.multiply(hidden_states, attention)
         r = tf.reduce_sum(r, axis=1)
         h_star = tf.tanh(r)
 
-        # h_star_dim_1 = h_star.get_shape().as_list()[1]
-        # h_star_dim_2 = h_star.get_shape().as_list()[2]
 
-        # h_star = tf.reshape(h_star, [batch_size, h_star_dim_1 * h_star_dim_2])
         logits = self.decoder(h_star)
 
         ### TODO(Students) END
