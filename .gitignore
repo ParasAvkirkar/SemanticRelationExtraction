@@ -1,6 +1,7 @@
 *.txt
 data/*
 *.pdf
+*.pickle
 serialization_dirs
 .idea
 __pycache__

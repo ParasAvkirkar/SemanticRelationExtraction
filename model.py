@@ -65,14 +65,70 @@ class MyBasicAttentiveBiGRU(models.Model):
 
 class MyAdvancedModel(models.Model):
 
-    def __init__(self):
+    def __init__(self, vocab_size: int, embed_dim: int, training: bool = False):
         super(MyAdvancedModel, self).__init__()
         ### TODO(Students) START
         # ...
+
+        self.vocab_size = vocab_size
+        self.embed_dim = embed_dim
+        # self.hidden_size = hidden_size
+        self.training = training
+
+
+        # window-size = 2
+        self.first_cnn_layer = layers.Conv1D(128, kernel_size=(2), input_shape=(None, self.embed_dim*2), activation="tanh")
+        self.first_max_pool = layers.GlobalMaxPool1D()
+
+        # # window-size = 3
+        # self.second_cnn_layer = layers.Conv1D(128, kernel_size=(3), input_shape=(None, self.embed_dim*2), activation="tanh")
+        # self.second_max_pool = layers.GlobalMaxPool1D()
+        #
+        # # window-size = 4
+        # self.third_cnn_layer = layers.Conv1D(128, kernel_size=(4), input_shape=(None, self.embed_dim*2), activation="tanh")
+        # self.third_max_pool = layers.GlobalMaxPool1D()
+        #
+        # # window-size = 5
+        # self.fourth_cnn_layer = layers.Conv1D(128, kernel_size=(5), input_shape=(None, self.embed_dim*2), activation="tanh")
+        # self.fourth_max_pool = layers.GlobalMaxPool1D()
+
+        self.num_classes = len(ID_TO_CLASS)
+
+        self.decoder = layers.Dense(units=self.num_classes)
+        # self.omegas = tf.Variable(tf.random.normal((hidden_size * 2, 1)))
+        self.embeddings = tf.Variable(tf.random.normal((vocab_size, embed_dim)))
+
         ### TODO(Students END
 
     def call(self, inputs, pos_inputs, training):
-        raise NotImplementedError
         ### TODO(Students) START
         # ...
+
+        word_embed = tf.nn.embedding_lookup(self.embeddings, inputs)
+        pos_embed = tf.nn.embedding_lookup(self.embeddings, pos_inputs)
+
+        shapes = inputs.get_shape().as_list()
+        batch_size = shapes[0]
+        time_steps = shapes[1]
+
+        final_embed = tf.concat([word_embed, pos_embed], axis=2)
+
+        first_conv_output = self.first_cnn_layer(final_embed)
+        first_max_output = self.first_max_pool(first_conv_output)
+
+        # second_conv_output = self.second_cnn_layer(final_embed)
+        # second_max_output = self.second_max_pool(second_conv_output)
+        #
+        # third_conv_output = self.third_cnn_layer(final_embed)
+        # third_max_output = self.third_max_pool(third_conv_output)
+        #
+        # fourth_conv_output = self.fourth_cnn_layer(final_embed)
+        # fourth_max_output = self.fourth_max_pool(fourth_conv_output)
+
+        # final_max_pool = tf.concat([first_max_output, second_max_output, third_max_output, fourth_max_output], axis=-1)
+        final_max_pool = first_max_output
+
+        logits = self.decoder(final_max_pool)
         ### TODO(Students END
+
+        return {'logits': logits}

@@ -32,10 +32,29 @@ if __name__ == '__main__':
     VOCAB_SIZE = 10000
     GLOVE_COMMON_WORDS_PATH = os.path.join("data", "glove_common_words.txt")
 
-    print(f"\nReading Train Instances")
-    train_instances = read_instances(args.data_file, MAX_TOKENS)
-    print(f"\nReading Val Instances")
-    val_instances = read_instances(args.val_file, MAX_TOKENS)
+    import os
+    import pickle
+
+    train_instances = None
+    val_instances = None
+    if os.path.isfile("train.pickle") and os.path.isfile("val.pickle"):
+        print("Reading training pickle")
+        with open("train.pickle", "rb") as f:
+            train_instances = pickle.load(f)
+        print("Reading validation pickle")
+        with open("val.pickle", "rb") as f:
+            val_instances = pickle.load(f)
+    else:
+        print(f"\nReading Train Instances")
+        train_instances = read_instances(args.data_file, MAX_TOKENS)
+        print(f"\nReading Val Instances")
+        val_instances = read_instances(args.val_file, MAX_TOKENS)
+
+        print("Dumping pickle")
+        with open("train.pickle", "wb") as f:
+            pickle.dump(train_instances, f)
+        with open("val.pickle", "wb") as f:
+            pickle.dump(val_instances, f)
 
     with open(GLOVE_COMMON_WORDS_PATH) as file:
         glove_common_words = [line.strip() for line in file.readlines() if line.strip()]
@@ -44,12 +63,15 @@ if __name__ == '__main__':
                                                             glove_common_words)
     vocab_size = len(np.unique(vocab_token_to_id.keys())[0])
 
+
     train_instances = index_instances(train_instances, vocab_token_to_id)
     val_instances = index_instances(val_instances, vocab_token_to_id)
 
     ### TODO(Students) START
     # make a config file here as expected by your MyAdvancedModel
-    config = {}
+    # config = {}
+
+    config = {'vocab_size': vocab_size, 'embed_dim': args.embed_dim, 'training': True}
     ### TODO(Students END
     model = MyAdvancedModel(**config)
     config['type'] = 'advanced'
