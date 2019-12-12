@@ -80,13 +80,13 @@ class MyAdvancedModel(models.Model):
         self.first_cnn_layer = layers.Conv1D(128, kernel_size=(2), input_shape=(None, self.embed_dim*2), activation="tanh")
         self.first_max_pool = layers.GlobalMaxPool1D()
 
-        # # window-size = 3
-        # self.second_cnn_layer = layers.Conv1D(128, kernel_size=(3), input_shape=(None, self.embed_dim*2), activation="tanh")
-        # self.second_max_pool = layers.GlobalMaxPool1D()
-        #
-        # # window-size = 4
-        # self.third_cnn_layer = layers.Conv1D(128, kernel_size=(4), input_shape=(None, self.embed_dim*2), activation="tanh")
-        # self.third_max_pool = layers.GlobalMaxPool1D()
+        # window-size = 3
+        self.second_cnn_layer = layers.Conv1D(128, kernel_size=(3), input_shape=(None, self.embed_dim*2), activation="tanh")
+        self.second_max_pool = layers.GlobalMaxPool1D()
+
+        # window-size = 4
+        self.third_cnn_layer = layers.Conv1D(128, kernel_size=(4), input_shape=(None, self.embed_dim*2), activation="tanh")
+        self.third_max_pool = layers.GlobalMaxPool1D()
         #
         # # window-size = 5
         # self.fourth_cnn_layer = layers.Conv1D(128, kernel_size=(5), input_shape=(None, self.embed_dim*2), activation="tanh")
@@ -94,6 +94,7 @@ class MyAdvancedModel(models.Model):
 
         self.num_classes = len(ID_TO_CLASS)
 
+        self.dropout_layer = layers.Dropout(0.5)
         self.decoder = layers.Dense(units=self.num_classes)
         # self.omegas = tf.Variable(tf.random.normal((hidden_size * 2, 1)))
         self.embeddings = tf.Variable(tf.random.normal((vocab_size, embed_dim)))
@@ -116,17 +117,21 @@ class MyAdvancedModel(models.Model):
         first_conv_output = self.first_cnn_layer(final_embed)
         first_max_output = self.first_max_pool(first_conv_output)
 
-        # second_conv_output = self.second_cnn_layer(final_embed)
-        # second_max_output = self.second_max_pool(second_conv_output)
-        #
-        # third_conv_output = self.third_cnn_layer(final_embed)
-        # third_max_output = self.third_max_pool(third_conv_output)
-        #
+        second_conv_output = self.second_cnn_layer(final_embed)
+        second_max_output = self.second_max_pool(second_conv_output)
+
+        third_conv_output = self.third_cnn_layer(final_embed)
+        third_max_output = self.third_max_pool(third_conv_output)
+
         # fourth_conv_output = self.fourth_cnn_layer(final_embed)
         # fourth_max_output = self.fourth_max_pool(fourth_conv_output)
 
         # final_max_pool = tf.concat([first_max_output, second_max_output, third_max_output, fourth_max_output], axis=-1)
-        final_max_pool = first_max_output
+        final_max_pool = tf.concat([first_max_output, second_max_output, third_max_output], axis=-1)
+        # final_max_pool = first_max_output
+
+        if training:
+            final_max_pool = self.dropout_layer(final_max_pool)
 
         logits = self.decoder(final_max_pool)
         ### TODO(Students END
