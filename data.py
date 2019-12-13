@@ -83,10 +83,32 @@ def read_instances(data_file_path: str,
         instance["text_tokens"] = tokens
         instance["pos_tags"] = pos
         instance["sentence_id"] = sentence_id
+
+        entity_one_relative_pos, entity_two_relative_pos = compute_relative_positions(tokens)
+        instance["entity_one_relative_pos"] = entity_one_relative_pos
+        instance["entity_two_relative_pos"] = entity_two_relative_pos
+
         instances.append(instance)
 
     return instances
 
+def compute_relative_positions(tokens):
+
+    def find_prefix_index(coll, val):
+        for i in range(len(coll)):
+            if val in coll[i]:
+                return i
+
+    first_entity_index = find_prefix_index(tokens, "e11_")
+    second_entity_index = find_prefix_index(tokens, "e21_")
+
+    entity_one_relative_positions = []
+    entity_two_relative_positions = []
+    for i in range(len(tokens)):
+        entity_one_relative_positions.append(i - first_entity_index)
+        entity_two_relative_positions.append(i - second_entity_index)
+
+    return entity_one_relative_positions, entity_two_relative_positions
 
 def find_shortest_path(doc, start, end):
     edges = []
@@ -245,8 +267,30 @@ def index_instances(instances: List[Dict], token_to_id: Dict) -> List[Dict]:
         instance["text_tokens_ids"] = token_ids
         instance["pos_tag_ids"] = pos_ids
         instance.pop("text_tokens")
+
+        add_entity_positional_ids(instance)
+
     return instances
 
+positional_id_mapping = {}
+for i in range(-39, 40):
+    positional_id_mapping[i] = len(positional_id_mapping)
+def add_entity_positional_ids(instance):
+    if "entity_one_relative_pos" in instance:
+        entity_one_relative_pos_ids = []
+        for pos in instance["entity_one_relative_pos"]:
+            entity_one_relative_pos_ids.append(positional_id_mapping[pos])
+        instance["entity_one_relative_pos_ids"] = entity_one_relative_pos_ids
+
+        instance.pop("entity_one_relative_pos")
+
+    if "entity_two_relative_pos" in instance:
+        entity_two_relative_pos_ids = []
+        for pos in instance["entity_two_relative_pos"]:
+            entity_two_relative_pos_ids.append(positional_id_mapping[pos])
+        instance["entity_two_relative_pos_ids"] = entity_two_relative_pos_ids
+
+        instance.pop("entity_two_relative_pos")
 
 def generate_batches(instances: List[Dict], batch_size) -> List[Dict[str, np.ndarray]]:
     """
@@ -266,7 +310,9 @@ def generate_batches(instances: List[Dict], batch_size) -> List[Dict[str, np.nda
 
         count = min(batch_size, len(batch_of_instances))
         batch = {"inputs": np.zeros((count, max_num_token_ids), dtype=np.int32),
-                 "pos_inputs": np.zeros((count, max_num_token_ids), dtype=np.int32)}
+                 "pos_inputs": np.zeros((count, max_num_token_ids), dtype=np.int32),
+                 "entity_one_pos_inputs": np.zeros((count, max_num_token_ids), dtype=np.int32),
+                 "entity_two_pos_inputs": np.zeros((count, max_num_token_ids), dtype=np.int32)}
 
         if "labels" in  batch_of_instances[0]:
             batch["labels"] = np.zeros((count, len(util.CLASS_TO_ID.keys())), dtype=np.int32)
@@ -279,6 +325,14 @@ def generate_batches(instances: List[Dict], batch_size) -> List[Dict[str, np.nda
 
             pos_inputs = np.array(instance["pos_tag_ids"])
             batch["pos_inputs"][batch_index][:num_tokens] = pos_inputs
+
+            if "entity_one_relative_pos_ids" in instance:
+                batch["entity_one_pos_inputs"][batch_index][:num_tokens] = np.array(
+                    instance["entity_one_relative_pos_ids"])
+
+            if "entity_two_relative_pos_ids" in instance:
+                batch["entity_two_pos_inputs"][batch_index][:num_tokens] = np.array(
+                    instance["entity_two_relative_pos_ids"])
 
             if "labels" in instance:
                 # Use 1 hot labels

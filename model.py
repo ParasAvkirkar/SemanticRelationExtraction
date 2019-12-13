@@ -77,15 +77,15 @@ class MyAdvancedModel(models.Model):
 
 
         # window-size = 2
-        self.first_cnn_layer = layers.Conv1D(128, kernel_size=(2), input_shape=(None, self.embed_dim*2), activation="tanh")
+        self.first_cnn_layer = layers.Conv1D(128, kernel_size=(2), input_shape=(None, self.embed_dim*2 + 100), activation="tanh")
         self.first_max_pool = layers.GlobalMaxPool1D()
 
         # window-size = 3
-        self.second_cnn_layer = layers.Conv1D(128, kernel_size=(3), input_shape=(None, self.embed_dim*2), activation="tanh")
+        self.second_cnn_layer = layers.Conv1D(128, kernel_size=(3), input_shape=(None, self.embed_dim*2 + 100), activation="tanh")
         self.second_max_pool = layers.GlobalMaxPool1D()
 
         # window-size = 4
-        self.third_cnn_layer = layers.Conv1D(128, kernel_size=(4), input_shape=(None, self.embed_dim*2), activation="tanh")
+        self.third_cnn_layer = layers.Conv1D(128, kernel_size=(4), input_shape=(None, self.embed_dim*2 + 100), activation="tanh")
         self.third_max_pool = layers.GlobalMaxPool1D()
         #
         # # window-size = 5
@@ -99,20 +99,25 @@ class MyAdvancedModel(models.Model):
         # self.omegas = tf.Variable(tf.random.normal((hidden_size * 2, 1)))
         self.embeddings = tf.Variable(tf.random.normal((vocab_size, embed_dim)))
 
+        self.entity_one_pos_embeddings = tf.Variable(tf.random.normal((100, 50)), trainable=True)
+        self.entity_two_pos_embeddings = tf.Variable(tf.random.normal((100, 50)), trainable=True)
+
         ### TODO(Students END
 
-    def call(self, inputs, pos_inputs, training):
+    def call(self, inputs, pos_inputs, entity_one_pos_inputs, entity_two_pos_inputs, training):
         ### TODO(Students) START
         # ...
 
         word_embed = tf.nn.embedding_lookup(self.embeddings, inputs)
         pos_embed = tf.nn.embedding_lookup(self.embeddings, pos_inputs)
+        entity_one_pos_embed = tf.nn.embedding_lookup(self.entity_one_pos_embeddings, entity_one_pos_inputs)
+        entity_two_pos_embed = tf.nn.embedding_lookup(self.entity_two_pos_embeddings, entity_two_pos_inputs)
 
         shapes = inputs.get_shape().as_list()
         batch_size = shapes[0]
         time_steps = shapes[1]
 
-        final_embed = tf.concat([word_embed, pos_embed], axis=2)
+        final_embed = tf.concat([word_embed, pos_embed, entity_one_pos_embed, entity_two_pos_embed], axis=2)
 
         first_conv_output = self.first_cnn_layer(final_embed)
         first_max_output = self.first_max_pool(first_conv_output)
