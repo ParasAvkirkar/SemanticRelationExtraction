@@ -36,7 +36,7 @@ class MyBasicAttentiveBiGRU(models.Model):
 
     def call(self, inputs, pos_inputs, training):
         word_embed = tf.nn.embedding_lookup(self.embeddings, inputs)
-        pos_embed = tf.nn.embedding_lookup(self.embeddings, pos_inputs)
+        # pos_embed = tf.nn.embedding_lookup(self.embeddings, pos_inputs)
 
         ### TODO(Students) START
         # ...
@@ -45,7 +45,8 @@ class MyBasicAttentiveBiGRU(models.Model):
         batch_size = shapes[0]
         time_steps = shapes[1]
 
-        final_embed = tf.concat([word_embed, pos_embed], axis=2)
+        # final_embed = tf.concat([word_embed, pos_embed], axis=2)
+        final_embed = word_embed
 
         hidden_states = self.bidirectional_layer(final_embed, training=training)
 
