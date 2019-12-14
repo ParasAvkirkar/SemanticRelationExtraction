@@ -51,12 +51,14 @@ class MyBasicAttentiveBiGRU(models.Model):
 
         attention = self.attn(hidden_states)
 
-        r = tf.multiply(hidden_states, attention)
-        r = tf.reduce_sum(r, axis=1)
+        # r = tf.multiply(hidden_states, attention)
+        # r = tf.reduce_sum(r, axis=1)
+        r = tf.matmul(hidden_states, attention, transpose_a=True)
         h_star = tf.tanh(r)
 
-
+        h_star = tf.reshape(h_star, [batch_size, hidden_states.shape[-1]])
         logits = self.decoder(h_star)
+
 
         ### TODO(Students) END
 

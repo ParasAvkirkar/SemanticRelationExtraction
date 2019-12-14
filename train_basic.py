@@ -57,7 +57,7 @@ if __name__ == '__main__':
     embeddings = load_glove_embeddings(args.embed_file, args.embed_dim, vocab_id_to_token)
     model.embeddings.assign(tf.convert_to_tensor(embeddings))
 
-    save_serialization_dir = os.path.join('serialization_dirs', 'basic')
+    save_serialization_dir = os.path.join('serialization_dirs', 'basic' + '_word_pos_experiment')
     if not os.path.exists(save_serialization_dir):
         os.makedirs(save_serialization_dir)
 
