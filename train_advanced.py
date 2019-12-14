@@ -37,7 +37,7 @@ if __name__ == '__main__':
 
     train_instances = None
     val_instances = None
-    if os.path.isfile("train.pickle") and os.path.isfile("val.pickle"):
+    if False:
         print("Reading training pickle")
         with open("train.pickle", "rb") as f:
             train_instances = pickle.load(f)
@@ -66,11 +66,6 @@ if __name__ == '__main__':
 
     train_instances = index_instances(train_instances, vocab_token_to_id)
     val_instances = index_instances(val_instances, vocab_token_to_id)
-
-    if True:
-        print(str(train_instances[:5]))
-        import sys
-        sys.exit(0)
 
     ### TODO(Students) START
     # make a config file here as expected by your MyAdvancedModel
