@@ -27,12 +27,16 @@ class MyBasicAttentiveBiGRU(models.Model):
         # ...
 
         M = tf.tanh(rnn_outputs)
-        alpha = tf.matmul(M, self.omegas)
-        alpha = tf.nn.softmax(alpha)
+
+        alpha = tf.tensordot(M, self.omegas, axes=[2, 0])
+        alpha = tf.nn.softmax(alpha, axis=1)
+        r = tf.multiply(rnn_outputs, alpha)
+        r = tf.reduce_sum(r, axis=1)
+        h_star = tf.tanh(r)
 
         ### TODO(Students) END
 
-        return alpha
+        return h_star
 
     def call(self, inputs, pos_inputs, training):
         word_embed = tf.nn.embedding_lookup(self.embeddings, inputs)
@@ -50,12 +54,7 @@ class MyBasicAttentiveBiGRU(models.Model):
 
         hidden_states = self.bidirectional_layer(final_embed, training=training)
 
-        attention = self.attn(hidden_states)
-
-        r = tf.multiply(hidden_states, attention)
-        r = tf.reduce_sum(r, axis=1)
-        h_star = tf.tanh(r)
-
+        h_star = self.attn(hidden_states)
 
         logits = self.decoder(h_star)
 
