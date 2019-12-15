@@ -52,9 +52,11 @@ class MyBasicAttentiveBiGRU(models.Model):
         batch_size = shapes[0]
         time_steps = shapes[1]
 
+        sequence_mask = tf.cast(inputs!=0, tf.float32)
+
         final_embed = tf.concat([word_embed, pos_embed], axis=2)
 
-        hidden_states = self.bidirectional_layer(final_embed, training=training)
+        hidden_states = self.bidirectional_layer(final_embed, training=training, mask=sequence_mask)
 
         h_star = self.attn(hidden_states)
 
@@ -90,9 +92,6 @@ class MyAdvancedModel(models.Model):
         self.third_cnn_layer = layers.Conv1D(128, kernel_size=(4), input_shape=(None, self.embed_dim*2), activation="tanh")
         self.third_max_pool = layers.GlobalMaxPool1D()
         #
-        # # window-size = 5
-        # self.fourth_cnn_layer = layers.Conv1D(128, kernel_size=(5), input_shape=(None, self.embed_dim*2), activation="tanh")
-        # self.fourth_max_pool = layers.GlobalMaxPool1D()
 
         self.num_classes = len(ID_TO_CLASS)
 
