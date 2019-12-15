@@ -27,8 +27,11 @@ class MyBasicAttentiveBiGRU(models.Model):
         # ...
 
         M = tf.tanh(rnn_outputs)
+        # temp_omega = tf.tile(omegas, multiples=[1, 10])
+        # temp_omega = tf.transpose(temp_omega)
+        # alpha = tf.multiply()
         alpha = tf.matmul(M, self.omegas)
-        alpha = tf.nn.softmax(alpha)
+        alpha = tf.nn.softmax(alpha, axis=1)
 
         ### TODO(Students) END
 
