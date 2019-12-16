@@ -3,6 +3,7 @@ data/*
 *.pdf
 *.pickle
 serialization_dirs
+submission
 .idea
 __pycache__
 
