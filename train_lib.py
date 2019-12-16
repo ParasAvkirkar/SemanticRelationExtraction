@@ -20,9 +20,6 @@ def train(model, optimizer, train_instances, validation_instances, num_epochs, b
     train_batch_labels = [batch_inputs.pop("labels") for batch_inputs in train_batches]
     val_batch_labels = [batch_inputs.pop("labels") for batch_inputs in val_batches]
 
-    train_losses = []
-    val_losses = []
-
     for epoch in range(num_epochs):
         print(f"\nEpoch{epoch}")
 
@@ -66,12 +63,6 @@ def train(model, optimizer, train_instances, validation_instances, num_epochs, b
         val_loss = val_loss/len(val_batches)
         print(f"Val loss for epoch: {round(float(val_loss), 4)}")
         print(f"Val F1 score: {round(float(f1), 4)}")
-
-        train_losses.append(epoch_loss.numpy())
-        val_losses.append(val_loss.numpy())
-
-    print(str(train_losses) + " train losses")
-    print(str(val_losses) + " val losses")
 
     model.save_weights(os.path.join(serialization_dir, f'model.ckpt'))
     return {'model': model}

@@ -80,9 +80,7 @@ class MyAdvancedModel(models.Model):
 
         self.vocab_size = vocab_size
         self.embed_dim = embed_dim
-        # self.hidden_size = hidden_size
         self.training = training
-
 
         # window-size = 2
         self.first_cnn_layer = layers.Conv1D(128, kernel_size=(2), input_shape=(None, self.embed_dim*2), activation="tanh")
@@ -95,13 +93,11 @@ class MyAdvancedModel(models.Model):
         # window-size = 4
         self.third_cnn_layer = layers.Conv1D(128, kernel_size=(4), input_shape=(None, self.embed_dim*2), activation="tanh")
         self.third_max_pool = layers.GlobalMaxPool1D()
-        #
 
         self.num_classes = len(ID_TO_CLASS)
 
         self.dropout_layer = layers.Dropout(0.5)
         self.decoder = layers.Dense(units=self.num_classes)
-        # self.omegas = tf.Variable(tf.random.normal((hidden_size * 2, 1)))
         self.embeddings = tf.Variable(tf.random.normal((vocab_size, embed_dim)))
 
         ### TODO(Students END
@@ -128,12 +124,7 @@ class MyAdvancedModel(models.Model):
         third_conv_output = self.third_cnn_layer(final_embed)
         third_max_output = self.third_max_pool(third_conv_output)
 
-        # fourth_conv_output = self.fourth_cnn_layer(final_embed)
-        # fourth_max_output = self.fourth_max_pool(fourth_conv_output)
-
-        # final_max_pool = tf.concat([first_max_output, second_max_output, third_max_output, fourth_max_output], axis=-1)
         final_max_pool = tf.concat([first_max_output, second_max_output, third_max_output], axis=-1)
-        # final_max_pool = first_max_output
 
         if training:
             final_max_pool = self.dropout_layer(final_max_pool)
