@@ -19,6 +19,7 @@ class MyBasicAttentiveBiGRU(models.Model):
         # ...
 
         self.bidirectional_layer = layers.Bidirectional(layers.GRU(units=hidden_size, return_sequences=True), merge_mode='concat')
+        self.dropout_layer = layers.Dropout(0.5)
 
         ### TODO(Students) END
 
@@ -59,6 +60,9 @@ class MyBasicAttentiveBiGRU(models.Model):
         hidden_states = self.bidirectional_layer(final_embed, training=training, mask=sequence_mask)
 
         h_star = self.attn(hidden_states)
+
+        if training:
+            h_star = self.dropout_layer(h_star)
 
         logits = self.decoder(h_star)
 
